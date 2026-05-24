@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="viewport" name="slides-format"/>
+<title>Verificación Formal – Coloreo de Grafos | Grupo 8</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=DM+Sans:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;700&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+<style type="text/tailwindcss">
+        @theme {
+            --color-bg:#0d1117;--color-bg-deep:#060a10;--color-surface:#161b22;
+            --color-text:#e6edf3;--color-text-secondary:#8b949e;--color-text-muted:#484f58;
+            --color-accent-1:#58a6ff;--color-accent-2:#3fb950;--color-accent-3:#d29922;
+            --color-glass-bg:rgba(255,255,255,0.05);--color-glass-border:rgba(255,255,255,0.08);
+            --color-vignette:rgba(0,0,0,0.5);
+            --font-display:'Instrument Serif',Georgia,serif;
+            --font-body:'DM Sans',system-ui,sans-serif;
+            --font-mono:'JetBrains Mono',monospace;
+        }
+    
+        /* ── Slide-4: acordeones desplegables (SOLO slide-4) ── */
+        .s4-accordion {
+            background: rgba(63,185,80,0.08);
+            border: 1px solid rgba(63,185,80,0.25);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: border-color 0.2s;
+        }
+        .s4-accordion[open] {
+            border-color: rgba(88,166,255,0.5);
+        }
+        .s4-summary {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.55rem 0.85rem;
+            cursor: pointer;
+            list-style: none;
+            user-select: none;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-weight: 600;
+            color: #3fb950;
+        }
+        .s4-summary::-webkit-details-marker { display: none; }
+        .s4-summary:hover { color: #58a6ff; }
+        .s4-arrow {
+            font-size: 0.6rem;
+            color: #58a6ff;
+            display: inline-block;
+            transition: transform 0.25s ease;
+            flex-shrink: 0;
+        }
+        .s4-accordion[open] .s4-arrow {
+            transform: rotate(90deg);
+        }
+        .s4-title code {
+            font-size: 0.65rem;
+            background: rgba(88,166,255,0.15);
+            padding: 0 0.3em;
+            border-radius: 3px;
+            color: #58a6ff;
+        }
+        .s4-body {
+            padding: 0.6rem 0.85rem 0.7rem;
+            font-size: 0.72rem;
+            color: #8b949e;
+            line-height: 1.55;
+            border-top: 1px solid rgba(63,185,80,0.18);
+            animation: s4-open 0.22s ease;
+        }
+        @keyframes s4-open {
+            from { opacity: 0; transform: translateY(-6px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .s4-label {
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #58a6ff;
+            margin-bottom: 0.35rem;
+            font-weight: 600;
+        }
+        .s4-body code {
+            font-size: 0.68rem;
+            background: rgba(88,166,255,0.12);
+            padding: 0 0.3em;
+            border-radius: 3px;
+            color: #58a6ff;
+        }
+</style>
+<style>
+        :root{--color-bg:#0d1117;--color-text:#e6edf3;--glow-color-rgb:88,166,255;}
+        *,*::before,*::after{box-sizing:border-box;}
+        html,body{background:var(--color-bg);margin:0;}
+        body{font-family:var(--font-body);color:var(--color-text);overflow:hidden;height:100vh;width:100vw;}
+        .deck{width:100vw;height:100vh;position:relative;}
+        .slide{position:absolute;top:0;left:0;width:100%;height:100%;background:var(--color-bg);display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;transform:scale(0.95);transition:opacity 0.7s ease,transform 0.7s ease;pointer-events:none;overflow:hidden;}
+        .slide.active{opacity:1;transform:scale(1);pointer-events:all;}
+        .slide>.content{position:relative;z-index:2;width:100%;max-width:1100px;padding:clamp(1rem,2.5vw,2.5rem);}
+        .nav-controls{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:12px;z-index:100;background:rgba(255,255,255,0.06);backdrop-filter:blur(10px);padding:6px 16px;border-radius:40px;border:1px solid rgba(255,255,255,0.08);}
+        .nav-btn{width:32px;height:32px;border:none;background:rgba(255,255,255,0.06);color:#58a6ff;border-radius:50%;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.3s;}
+        .nav-btn:hover{background:rgba(255,255,255,0.12);}
+        .slide-dots{display:flex;gap:4px;flex-wrap:wrap;max-width:200px;justify-content:center;}
+        .slide-dots .dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.15);cursor:pointer;transition:background 0.3s,transform 0.3s;}
+        .slide-dots .dot.active{background:#58a6ff;transform:scale(1.3);}
+        .slide-counter{font-size:0.68rem;color:#484f58;min-width:32px;text-align:center;font-family:var(--font-mono);}
+        .reveal{opacity:0;transform:translateY(18px);}
+        @keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-14px);}}
+        @keyframes float-slow{0%{transform:translate(0,0) scale(1);}25%{transform:translate(60px,-50px) scale(1.12);}50%{transform:translate(-40px,40px) scale(0.9);}75%{transform:translate(50px,20px) scale(1.08);}100%{transform:translate(0,0) scale(1);}}
+        @keyframes float-drift{0%{transform:translate(0,0) scale(1) rotate(0deg);}33%{transform:translate(-50px,-60px) scale(1.15) rotate(3deg);}66%{transform:translate(40px,30px) scale(0.88) rotate(-2deg);}100%{transform:translate(0,0) scale(1) rotate(0deg);}}
+        @keyframes glow-pulse{0%,100%{text-shadow:0 0 20px rgba(88,166,255,0.5),0 0 40px rgba(88,166,255,0.2);}50%{text-shadow:0 0 30px rgba(88,166,255,0.8),0 0 60px rgba(88,166,255,0.3);}}
+        .gradient-mesh{position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none;}
+        .blob{position:absolute;border-radius:50%;filter:blur(80px);animation:float-slow 10s ease-in-out infinite;}
+        .blob:nth-child(2){animation:float-drift 14s ease-in-out infinite;}
+        .blob:nth-child(3){animation:float-slow 18s ease-in-out infinite reverse;}
+        .slide::before{content:'';position:absolute;inset:0;z-index:1;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");background-repeat:repeat;background-size:256px 256px;opacity:0.03;mix-blend-mode:overlay;}
+        .slide::after{content:'';position:absolute;inset:0;z-index:1;pointer-events:none;background:radial-gradient(ellipse at center,transparent 50%,var(--color-vignette) 100%);}
+        /* Code blocks */
+        .code-block{background:#0d1117;border:1px solid rgba(88,166,255,0.18);border-radius:8px;padding:.7rem .9rem;font-family:var(--font-mono);font-size:clamp(0.52rem,.82vw,0.68rem);line-height:1.75;color:#e6edf3;overflow:hidden;position:relative;}
+        .kw{color:#ff7b72;}.kv{color:#79c0ff;}.cm{color:#8b949e;font-style:italic;}.nm{color:#f0883e;}.op{color:#58a6ff;}.hl-line{background:rgba(88,166,255,0.12);display:block;border-radius:3px;padding:0 4px;margin:0 -4px;}
+        /* Cards */
+        .inv-card{border-left:3px solid;border-radius:8px;padding:.6rem .85rem;background:rgba(255,255,255,0.04);}
+        .explain-box{background:rgba(63,185,80,0.08);border:1px solid rgba(63,185,80,0.25);border-radius:8px;padding:.6rem .85rem;}
+        /* Dropdown tooltip — hover to reveal */
+        .has-detail{position:relative;cursor:pointer;transition:outline 0.2s;}
+        .has-detail:hover{outline:1px solid rgba(88,166,255,0.3);border-radius:8px;}
+        /* Side-panel tooltip — JS positioned, never overlaps content */
+        #hover-panel{
+            display:none;position:fixed;z-index:200;
+            width:240px;
+            background:#161b22;
+            border:1px solid rgba(88,166,255,0.35);
+            border-radius:12px;
+            padding:.9rem 1rem;
+            font-size:.7rem;color:#8b949e;line-height:1.65;
+            box-shadow:0 12px 40px rgba(0,0,0,0.65);
+            pointer-events:none;
+            transition:opacity 0.15s ease;
+        }
+        #hover-panel.visible{display:block;}
+        #hover-panel .panel-arrow{
+            position:absolute;width:8px;height:8px;
+            background:#161b22;
+            border:1px solid rgba(88,166,255,0.35);
+        }
+        
+        .detail-tip{display:none;}
+.detail-label{font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:#58a6ff;margin-bottom:.4rem;font-weight:600;}
+        /* Bar */
+        .bar-track{background:rgba(255,255,255,0.06);border-radius:999px;height:18px;overflow:hidden;}
+        .bar-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#58a6ff,#3fb950);width:0%;transition:width 0.8s ease;}
+        @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:0.01ms !important;transition-duration:0.2s !important;}}
+    </style>
+</head>
+<body>
+<!-- Side hover panel (JS positioned) -->
+<div id="hover-panel"><div class="detail-label" id="hover-panel-label"></div><div id="hover-panel-body"></div></div>
+<div class="mouse-spotlight" style="position:fixed;inset:0;z-index:99;pointer-events:none;"></div>
+<div class="deck">
+<!-- ===== SLIDE 1 — PORTADA ===== -->
+<div class="slide slide-1 active" data-slide="1">
+<div class="gradient-mesh">
+<div class="blob" style="width:500px;height:500px;top:-120px;right:-120px;background:#58a6ff;opacity:0.12;"></div>
+<div class="blob" style="width:340px;height:340px;bottom:-80px;left:-60px;background:#3fb950;opacity:0.10;"></div>
+<div class="blob" style="width:220px;height:220px;top:38%;left:12%;background:#d29922;opacity:0.08;"></div>
+</div>
+<canvas class="particle-canvas" style="position:absolute;inset:0;z-index:1;"></canvas>
+<div class="content text-center">
+<div class="text-[88px] mb-3 animate-[float_8s_ease-in-out_infinite]">🎨</div>
+<div class="reveal mb-2"><span class="inline-block px-3 py-1 rounded-full text-xs font-semibold tracking-widest uppercase border border-accent-1/30 text-accent-1">SI1001 · Teoría de la Computación</span></div>
+<h1 class="font-display text-[clamp(2rem,5vw,4rem)] font-black bg-linear-to-br from-accent-1 via-accent-2 to-accent-1 bg-clip-text text-transparent tracking-tight mb-3 reveal" style="line-height:1.15;">Verificación Formal del<br/>Algoritmo de Coloreo de Grafos</h1>
+<p class="text-[clamp(0.8rem,1.3vw,1rem)] text-text-muted tracking-[5px] uppercase mb-6 reveal">Lógica de Hoare · Invariantes · Terminación</p>
+<div class="reveal flex flex-wrap justify-center gap-6 text-sm text-text-secondary">
+<span>Kenny Díaz Díaz</span>
+<span class="text-accent-1/40">·</span>
+<span>Johan Smith Tobón Gaviria</span>
+</div>
+<p class="text-text-muted text-xs mt-3 reveal tracking-widest">GRUPO 8 · 26 MAYO 2026</p>
+</div>
+</div>
+<!-- ===== SLIDE 2 — ÍNDICE ===== -->
+<div class="slide slide-2" data-slide="2">
+<div class="gradient-mesh">
+<div class="blob" style="width:380px;height:380px;top:-80px;right:-80px;background:#58a6ff;opacity:0.07;"></div>
+<div class="blob" style="width:260px;height:260px;bottom:-60px;left:-40px;background:#3fb950;opacity:0.06;"></div>
+</div>
+<div class="content">
+<div class="reveal mb-1"><span class="text-xs uppercase tracking-widest text-text-muted">Contenido de la exposición</span></div>
+<h2 class="font-display text-[clamp(1.8rem,3.5vw,2.8rem)] font-bold mb-5 reveal">Índice</h2>
+<div class="grid grid-cols-2 gap-4">
+<div class="inv-card reveal" style="border-color:#58a6ff;">
+<div class="flex items-center gap-3 mb-1"><span class="text-xl">🔵</span><span class="text-xs uppercase tracking-widest text-accent-1 font-semibold">01 · 2–3 min</span></div>
+<p class="font-semibold text-text">Introducción y Contexto</p>
+<p class="text-text-secondary text-xs mt-1">¿Qué es colorear un grafo? ¿Para qué sirve? Términos clave explicados de forma sencilla.</p>
+</div>
+<div class="inv-card reveal" style="border-color:#3fb950;">
+<div class="flex items-center gap-3 mb-1"><span class="text-xl">🟢</span><span class="text-xs uppercase tracking-widest text-accent-2 font-semibold">02 · 4–5 min</span></div>
+<p class="font-semibold text-text">El Algoritmo Paso a Paso</p>
+<p class="text-text-secondary text-xs mt-1">Código real con dos ejemplos visuales — uno simple (5 vértices) y uno complejo (8 vértices).</p>
+</div>
+<div class="inv-card reveal" style="border-color:#d29922;">
+<div class="flex items-center gap-3 mb-1"><span class="text-xl">🟡</span><span class="text-xs uppercase tracking-widest text-accent-3 font-semibold">03 · 6–7 min</span></div>
+<p class="font-semibold text-text">Verificación Formal</p>
+<p class="text-text-secondary text-xs mt-1">Terna de Hoare {P}S{Q}, los 4 invariantes, demostración de correctitud y terminación.</p>
+</div>
+<div class="inv-card reveal" style="border-color:#bc8cff;">
+<div class="flex items-center gap-3 mb-1"><span class="text-xl">🟣</span><span class="text-xs uppercase tracking-widest font-semibold" style="color:#bc8cff;">04 · 2–3 min</span></div>
+<p class="font-semibold text-text">Reflexión y Conclusiones</p>
+<p class="text-text-secondary text-xs mt-1">Aplicaciones reales del coloreo, límites del greedy y ventajas de la verificación formal.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- ===== SLIDE 3 — INTRODUCCIÓN ===== -->
+<div class="slide slide-3" data-slide="3">
+<div class="gradient-mesh">
+<div class="blob" style="width:400px;height:400px;top:-100px;left:-100px;background:#58a6ff;opacity:0.08;"></div>
+<div class="blob" style="width:280px;height:280px;bottom:-60px;right:-40px;background:#3fb950;opacity:0.06;"></div>
+</div>
+<div class="content">
+<div class="reveal mb-1"><span class="text-xs uppercase tracking-widest text-text-muted">Introducción</span></div>
+<h2 class="font-display text-[clamp(1.6rem,3vw,2.4rem)] font-bold mb-4 reveal">¿Qué es colorear un grafo?</h2>
+<div class="grid grid-cols-2 gap-5 items-start">
+<div class="flex flex-col gap-3">
+<div class="bg-glass-bg backdrop-blur-xl border border-glass-border rounded-xl p-4 reveal has-detail">
+<p class="text-xs uppercase tracking-widest text-accent-1 font-semibold mb-2">La idea en simple <span class="text-accent-1/50 text-[10px] ml-1">▸ hover para más</span></p>
+<div class="detail-tip">
+<div class="detail-label">Explicación extendida</div>
+                        Un grafo G=(V,E) es una estructura matemática con un conjunto V de vértices (puntos) y un conjunto E de aristas (pares de vértices conectados). Un <em>coloreo válido</em> es una función f: V → {1,2,...,k} tal que para toda arista (u,v)∈E se cumple f(u) ≠ f(v). El algoritmo greedy construye esta función de forma incremental, procesando los vértices uno a uno y asignando siempre el menor número disponible.
+                    </div>
+</div>
+<div class="bg-glass-bg backdrop-blur-xl border border-glass-border rounded-xl p-4 reveal has-detail">
+<p class="text-xs uppercase tracking-widest text-accent-3 font-semibold mb-2">Términos clave <span class="text-accent-3/50 text-[10px] ml-1">▸ hover para más</span></p>
+<ul class="text-sm text-text-secondary space-y-1">
+<li><span class="font-mono text-accent-1">G=(V,E)</span> — Grafo: V son los vértices, E las aristas</li>
+<li><span class="font-mono text-accent-2">χ(G)</span> — Número cromático: mínimo de colores necesarios</li>
+<li><span class="font-mono text-accent-3">Δ(G)</span> — Grado máximo: el vértice con más vecinos</li>
+<li><span class="font-mono" style="color:#bc8cff;">Greedy</span> — Asigna el menor color disponible, sin mirar hacia adelante</li>
+</ul>
+<div class="detail-tip" style="left:auto;right:0;">
+<div class="detail-label">¿Por qué Δ(G)+1 es la cota?</div>
+                        Si un vértice tiene a lo sumo Δ(G) vecinos, esos vecinos pueden bloquear como máximo Δ(G) colores distintos. El color Δ(G)+1 siempre queda libre. Por eso el greedy NUNCA necesita más de Δ(G)+1 colores, sin importar el grafo.
+                    </div>
+</div>
+<div class="reveal bg-accent-1/10 border border-accent-1/25 rounded-lg p-3 text-center">
+<p class="text-xs text-text-muted mb-1">Garantía que demuestra el algoritmo:</p>
+<p class="font-mono text-accent-1 text-lg font-bold">χ(G) ≤ Δ(G) + 1</p>
+<p class="text-xs text-text-muted mt-1">Nunca necesitamos más colores que (mayor cantidad de vecinos) + 1</p>
+</div>
+</div>
+<div class="reveal">
+<div class="bg-surface border border-glass-border rounded-xl p-4 text-center">
+<p class="text-xs text-text-muted uppercase tracking-widest mb-3">Ejemplo visual: Δ(G)=3 → usamos 3 colores ≤ 4</p>
+<svg class="w-full" viewbox="0 0 260 220">
+<line stroke="rgba(255,255,255,0.2)" stroke-width="2" x1="130" x2="50" y1="40" y2="120"></line>
+<line stroke="rgba(255,255,255,0.2)" stroke-width="2" x1="130" x2="210" y1="40" y2="120"></line>
+<line stroke="rgba(255,255,255,0.2)" stroke-width="2" x1="130" x2="130" y1="40" y2="150"></line>
+<line stroke="rgba(255,255,255,0.2)" stroke-width="2" x1="50" x2="80" y1="120" y2="190"></line>
+<line stroke="rgba(255,255,255,0.2)" stroke-width="2" x1="210" x2="180" y1="120" y2="190"></line>
+<line stroke="rgba(255,255,255,0.2)" stroke-width="2" x1="50" x2="210" y1="120" y2="120"></line>
+<circle cx="130" cy="40" fill="#1158a6" r="22" stroke="#58a6ff" stroke-width="2"></circle>
+<circle cx="50" cy="120" fill="#1a5c2a" r="22" stroke="#3fb950" stroke-width="2"></circle>
+<circle cx="210" cy="120" fill="#6b4c10" r="22" stroke="#d29922" stroke-width="2"></circle>
+<circle cx="80" cy="190" fill="#6b4c10" r="22" stroke="#d29922" stroke-width="2"></circle>
+<circle cx="180" cy="190" fill="#1158a6" r="22" stroke="#58a6ff" stroke-width="2"></circle>
+<text dominant-baseline="middle" style="font-family:monospace;font-size:11px;fill:#58a6ff;font-weight:700;" text-anchor="middle" x="130" y="45">v₁</text>
+<text dominant-baseline="middle" style="font-family:monospace;font-size:11px;fill:#3fb950;font-weight:700;" text-anchor="middle" x="50" y="125">v₂</text>
+<text dominant-baseline="middle" style="font-family:monospace;font-size:11px;fill:#d29922;font-weight:700;" text-anchor="middle" x="210" y="125">v₃</text>
+<text dominant-baseline="middle" style="font-family:monospace;font-size:11px;fill:#d29922;font-weight:700;" text-anchor="middle" x="80" y="195">v₄</text>
+<text dominant-baseline="middle" style="font-family:monospace;font-size:11px;fill:#58a6ff;font-weight:700;" text-anchor="middle" x="180" y="195">v₅</text>
+</svg>
+<div class="flex justify-center gap-3 mt-2 flex-wrap">
+<span class="text-xs flex items-center gap-1"><span class="w-3 h-3 rounded-full" style="background:#58a6ff"></span>Color 1: v₁, v₅</span>
+<span class="text-xs flex items-center gap-1"><span class="w-3 h-3 rounded-full" style="background:#3fb950"></span>Color 2: v₂</span>
+<span class="text-xs flex items-center gap-1"><span class="w-3 h-3 rounded-full" style="background:#d29922"></span>Color 3: v₃, v₄</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- ===== SLIDE 4 — CÓDIGO OFICIAL ===== -->
+<div class="slide slide-4" data-slide="4">
+<div class="gradient-mesh">
+<div class="blob" style="width:350px;height:350px;top:-80px;right:-60px;background:#58a6ff;opacity:0.07;"></div>
+<div class="blob" style="width:240px;height:240px;bottom:-50px;left:-40px;background:#3fb950;opacity:0.06;"></div>
+</div>
+<div class="content">
+<div class="reveal mb-1"><span class="text-xs uppercase tracking-widest text-text-muted">Algoritmo Oficial</span></div>
+<h2 class="font-display text-[clamp(1.4rem,2.6vw,2rem)] font-bold mb-3 reveal">El Código del Algoritmo</h2>
+<div class="grid grid-cols-2 gap-4 items-start">
+<div class="reveal">
+<div class="code-block">
+<span class="cm">// Precondition P: G=(V,E) simple undirected graph, V={v1..vn}, V≠∅</span><br/>
+<span class="kv">color</span>[·] ← <span class="nm">0</span><br/>
+<span class="kv">colors-used</span> ← <span class="nm">0</span><br/>
+<span class="kv">available</span>[·] ← <span class="kw">true</span><br/>
+<br/>
+<span class="cm">// Invariant I0: colors form range {1,...,colors-used} — no gaps</span><br/>
+<span class="cm">// Invariant I1: ∀j&lt;i, color[vj] valid — no conflicts with prior vertices</span><br/>
+<span class="cm">// Invariant I2: colors-used ≤ Δ(G)+1</span><br/>
+<span class="cm">// Invariant I3: adjacent vertices have different colors</span><br/>
+<br/>
+<span class="kw">for</span> <span class="kv">i</span> ← <span class="nm">1</span> <span class="kw">to</span> <span class="kv">n</span> <span class="kw">do</span><br/>
+  <span class="kw">for</span> <span class="kv">c</span> ← <span class="nm">1</span> <span class="kw">to</span> <span class="kv">colors-used</span> <span class="kw">do</span><br/>
+    <span class="kv">available</span>[<span class="kv">c</span>] ← <span class="kw">true</span><br/>
+  <span class="kw">end for</span><br/>
+<br/>
+  <span class="kw">for each</span> neighbor <span class="kv">vj</span> of <span class="kv">vi</span> <span class="kw">with</span> j&lt;i <span class="kw">do</span><br/>
+    <span class="kw">if</span> <span class="kv">color</span>[<span class="kv">vj</span>] ≠ <span class="nm">0</span> <span class="kw">then</span><br/>
+      <span class="kv">available</span>[<span class="kv">color</span>[<span class="kv">vj</span>]] ← <span class="kw">false</span><br/>
+    <span class="kw">end if</span><br/>
+  <span class="kw">end for</span><br/>
+<br/>
+  <span class="kv">c</span> ← <span class="nm">1</span><br/>
+  <span class="kw">while</span> <span class="kv">c</span> ≤ <span class="kv">colors-used</span> ∧ ¬<span class="kv">available</span>[<span class="kv">c</span>] <span class="kw">do</span><br/>
+    <span class="kv">c</span> ← <span class="kv">c</span> + <span class="nm">1</span><br/>
+  <span class="kw">end while</span><br/>
+<br/>
+  <span class="kw">if</span> <span class="kv">c</span> &gt; <span class="kv">colors-used</span> <span class="kw">then</span><br/>
+    <span class="kv">colors-used</span> ← <span class="kv">colors-used</span> + <span class="nm">1</span><br/>
+    <span class="kv">c</span> ← <span class="kv">colors-used</span><br/>
+  <span class="kw">end if</span><br/>
+<br/>
+  <span class="kv">color</span>[<span class="kv">vi</span>] ← <span class="kv">c</span><br/>
+<span class="kw">end for</span><br/>
+<span class="cm">// Postcondition Q: ∀(u,v)∈E: color[u]≠color[v], colors-used ≤ Δ(G)+1</span>
+</div>
+</div>
+<div class="flex flex-col gap-3">
+<details class="s4-accordion reveal" id="s4-acc-1">
+<summary class="s4-summary">
+  <span class="s4-arrow">▶</span>
+  <span class="s4-title">¿Qué hace el bucle principal? <code>(for i)</code></span>
+</summary>
+<div class="s4-body">
+  <div class="s4-label">Detalle del bucle externo</div>
+  El bucle <code>for i ← 1 to n</code> garantiza que cada vértice se procesa exactamente una vez. El orden de procesamiento es fijo: v₁, v₂, ..., vₙ. Este orden influye en el resultado final (distintos órdenes pueden producir distintas cantidades de colores), pero la cota Δ(G)+1 siempre se mantiene independientemente del orden.
+</div>
+</details>
+<details class="s4-accordion reveal" id="s4-acc-2">
+<summary class="s4-summary">
+  <span class="s4-arrow">▶</span>
+  <span class="s4-title">¿Qué hace el reinicio? <code>(for c)</code></span>
+</summary>
+<div class="s4-body">
+  <div class="s4-label">¿Por qué reiniciar hasta colors-used?</div>
+  El invariante I0 garantiza que los colores forman la secuencia {1,...,colors-used} sin huecos. Por tanto, reiniciar solo ese rango es suficiente — no hay colores activos fuera de ese rango. Si hubiera huecos, el reinicio parcial dejaría colores "fantasma" con valores residuales.
+</div>
+</details>
+<details class="s4-accordion reveal" id="s4-acc-3">
+<summary class="s4-summary">
+  <span class="s4-arrow">▶</span>
+  <span class="s4-title">¿Qué hace el bloqueo de vecinos?</span>
+</summary>
+<div class="s4-body">
+  <div class="s4-label">Solo vecinos con j&lt;i</div>
+  El algoritmo solo revisa vecinos procesados antes (<em>j &lt; i</em>). Los vecinos futuros (j &gt; i) aún no tienen color asignado, así que no generan conflicto ahora. Cuando llegue su turno, ELLOS revisarán a vᵢ como vecino anterior y evitarán su color.
+</div>
+</details>
+<details class="s4-accordion reveal" id="s4-acc-4">
+<summary class="s4-summary">
+  <span class="s4-arrow">▶</span>
+  <span class="s4-title">¿Qué hace la búsqueda y asignación?</span>
+</summary>
+<div class="s4-body">
+  <div class="s4-label">¿Por qué c no puede superar Δ(G)+1?</div>
+  Si todos los colores {1,...,colors-used} están bloqueados, cada uno está asociado a un vecino distinto con j&lt;i. Hay a lo sumo Δ(G) vecinos → colors-used ≤ Δ(G). Al crear el nuevo color, colors-used ← colors-used+1 ≤ Δ(G)+1. El invariante I2 se mantiene siempre.
+</div>
+</details>
+</div>
+</div>
+</div>
+</div>
+<!-- ===== SLIDE 5 — PASO A PASO Ejemplo 1 (grafo + iteraciones i=1,2,3) ===== -->
+<div class="slide slide-5" data-slide="5">
+<div class="gradient-mesh">
+<div class="blob" style="width:360px;height:360px;top:-80px;right:-80px;background:#58a6ff;opacity:0.07;"></div>
+<div class="blob" style="width:240px;height:240px;bottom:-50px;left:-40px;background:#d29922;opacity:0.06;"></div>
+</div>
+<div class="content">
+<div class="reveal mb-1"><span class="text-xs uppercase tracking-widest text-text-muted">Ejemplo 1 · Grafo simple 5 vértices — i = 1, 2, 3</span></div>
+<h2 class="font-display text-[clamp(1.4rem,2.6vw,2rem)] font-bold mb-3 reveal">Ejecución Greedy — Primeras 3 iteraciones</h2>
+<div class="grid grid-cols-2 gap-4 items-start">
+<!-- Grafo visual con estado progresivo -->
+<div class="reveal">
+<div class="bg-surface border border-glass-border rounded-xl p-3">
+<p class="text-xs text-text-muted uppercase tracking-widest mb-2 text-center">Estructura del grafo (después de i=3)</p>
+<svg class="w-full" viewbox="0 0 280 230">
+<!-- Aristas -->
+<line stroke="rgba(255,255,255,0.22)" stroke-width="2" x1="140" x2="55" y1="38" y2="115"></line>
+<line stroke="rgba(255,255,255,0.22)" stroke-width="2" x1="140" x2="225" y1="38" y2="115"></line>
+<line stroke="rgba(255,255,255,0.22)" stroke-width="2" x1="140" x2="140" y1="38" y2="155"></line>
+<line stroke="rgba(255,255,255,0.22)" stroke-width="2" x1="55" x2="85" y1="115" y2="195"></line>
+<line stroke="rgba(255,255,255,0.22)" stroke-width="2" x1="225" x2="195" y1="115" y2="195"></line>
+<line stroke="rgba(255,255,255,0.22)" stroke-width="2" x1="55" x2="225" y1="115" y2="115"></line>
+<!-- v4, v5 — sin color aún (gris) -->
+<circle cx="85" cy="195" fill="#222" r="20" stroke="#484f58" stroke-dasharray="4,2" stroke-width="2"></circle>
+<circle cx="195" cy="195" fill="#222" r="20" stroke="#484f58" stroke-dasharray="4,2" stroke-width="2"></circle>
+<!-- v1 azul, v2 verde, v3 amarillo — ya coloreados -->
+<circle cx="140" cy="38" fill="#1158a6" r="20" stroke="#58a6ff" stroke-width="2.5"></circle>
+<circle cx="55" cy="115" fill="#1a5c2a" r="20" stroke="#3fb950" stroke-width="2.5"></circle>
+<circle cx="225" cy="115" fill="#6b4c10" r="20" stroke="#d29922" stroke-width="2.5"></circle>
+<!-- Labels -->
+<text dominant-baseline="middle" style="font-family:monospace;font-size:11px;fill:#58a6ff;font-weight:700;" text-anchor="middle" x="140" y="42">v₁</text>
+<text dominant-baseline="middle" style="font-family:monospace;font-size:11px;fill:#3fb950;font-weight:700;" text-anchor="middle" x="55" y="119">v₂</text>
+<text dominant-baseline="middle" style="font-family:monospace;font-size:11px;fill:#d29922;font-weight:700;" text-anchor="middle" x="225" y="119">v₃</text>
+<text dominant-baseline="middle" style="font-family:monospace;font-size:10px;fill:#484f58;font-weight:600;" text-anchor="middle" x="85" y="199">v₄</text>
+<text dominant-baseline="middle" style="font-family:monospace;font-size:10px;fill:#484f58;font-weight:600;" text-anchor="middle" x="195" y="199">v₅</text>
+<!-- Leyenda de estado -->
+<rect fill="rgba(0,0,0,0.4)" height="20" rx="4" width="120" x="10" y="10"></rect>
+<text style="font-size:9px;fill:#8b949e;" x="16" y="23">✓ coloreado  - pendiente</text>
+</svg>
+<div class="flex justify-center gap-3 mt-2 flex-wrap">
+<span class="text-xs flex items-center gap-1"><span class="w-3 h-3 rounded-full" style="background:#58a6ff;"></span>Color 1</span>
+<span class="text-xs flex items-center gap-1"><span class="w-3 h-3 rounded-full" style="background:#3fb950;"></span>Color 2</span>
+<span class="text-xs flex items-center gap-1"><span class="w-3 h-3 rounded-full" style="background:#d29922;"></span>Color 3</span>
+<span class="text-xs flex items-center gap-1"><span class="w-3 h-3 rounded-full border border-dashed border-[#484f58]" style="background:#222;"></span>Sin color</span>
+</div>
+</div>
+</div>
+<!-- Iteraciones -->
+<div class="flex flex-col gap-2">
+<div class="bg-surface border border-glass-border rounded-xl p-3 reveal has-detail">
+<p class="text-xs font-mono text-accent-1 font-bold mb-1">i=1 → v₁  <span class="text-[10px] text-accent-1/50">▸ hover</span></p>
+<div class="code-block" style="font-size:0.55rem;">
+<span class="cm">// Reset: cu=0, skip. No neighbors j&lt;1.</span><br/>
+c=1 &gt; cu(0) → cu=<span class="nm">1</span>; color[v₁] ← <span class="nm">1</span> 🔵
+                    </div>
+<div class="detail-tip">
+<div class="detail-label">¿Por qué no hay vecinos que revisar?</div>
+                        El bucle "for each neighbor vj with j&lt;i" busca vecinos con índice menor. En i=1, no existe ningún j con j &lt; 1, así que el bucle no ejecuta ninguna iteración. available[] queda todo true, y c=1 siempre estará disponible.
+                    </div>
+</div>
+<div class="bg-surface border border-glass-border rounded-xl p-3 reveal has-detail">
+<p class="text-xs font-mono text-accent-2 font-bold mb-1">i=2 → v₂ (vecino: v₁)  <span class="text-[10px] text-accent-2/50">▸ hover</span></p>
+<div class="code-block" style="font-size:0.55rem;">
+<span class="cm">// Reset available[1]=true. Neighbor v₁(c=1): available[1]=false.</span><br/>
+c=1→blocked, c=2 &gt; cu(1) → cu=<span class="nm">2</span>; color[v₂] ← <span class="nm">2</span> 🟢
+                    </div>
+<div class="detail-tip">
+<div class="detail-label">El while y el if en este caso</div>
+                        El while arranca con c=1. Como available[1]=false (bloqueado por v₁), c se incrementa a 2. Ahora c=2 &gt; cu=1, así que el while termina. Luego el if detecta c &gt; cu y crea el nuevo color: cu←2, c←2. Se asigna color[v₂]=2.
+                    </div>
+</div>
+<div class="bg-surface border border-glass-border rounded-xl p-3 reveal has-detail">
+<p class="text-xs font-mono text-accent-3 font-bold mb-1">i=3 → v₃ (vecinos: v₁, v₂)  <span class="text-[10px] text-accent-3/50">▸ hover</span></p>
+<div class="code-block" style="font-size:0.55rem;">
+<span class="cm">// Reset available[1,2]=true.</span><br/>
+<span class="cm">// v₁(c=1)→avail[1]=false; v₂(c=2)→avail[2]=false</span><br/>
+c=1→blocked, c=2→blocked, c=3 &gt; cu(2) → cu=<span class="nm">3</span>; color[v₃] ← <span class="nm">3</span> 🟡
+                    </div>
+<div class="detail-tip">
+<div class="detail-label">¿Por qué es el "peor caso"?</div>
+                        v₃ está conectado a v₁ (color 1) y v₂ (color 2). Los dos únicos colores existentes están bloqueados. El algoritmo no tiene más opción que crear un tercer color. Esto refleja que v₃ forma un triángulo con v₁ y v₂ (K₃), lo que matemáticamente requiere 3 colores mínimo.
+                    </div>
+</div>
+<div class="reveal bg-accent-1/08 border border-accent-1/20 rounded-lg p-2">
+<p class="text-xs text-text-secondary"><strong class="text-accent-1">Estado:</strong> cu=3, coloreados: v₁(1), v₂(2), v₃(3). Invariante I3 verificado: v₁↔v₂ (1≠2✓), v₁↔v₃ (1≠3✓), v₂↔v₃ (2≠3✓). Pendientes: v₄, v₅.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- ===== SLIDE 6 — PASO A PASO Ejemplo 1 i=4,5 ===== -->
+<div class="slide slide-6" data-slide="6">
+<div class="gradient-mesh">
+<div class="blob" style="width:360px;height:360px;top:-80px;left:-80px;background:#3fb950;opacity:0.07;"></div>
+<div class="blob" style="width:240px;height:240px;bottom:-50px;right:-40px;background:#58a6ff;opacity:0.06;"></div>
+</div>
+<div class="content">
+<div class="reveal mb-1"><span class="text-xs uppercase tracking-widest text-text-muted">Ejemplo 1 · Grafo simple 5 vértices — i = 4, 5 — Coloreo Final</span></div>
+<h2 class="font-display text-[clamp(1.4rem,2.6vw,2rem)] font-bold mb-3 reveal">Ejecución Greedy — Completando el grafo</h2>
+<div class="grid grid-cols-2 gap-5 items-start">
+<div class="flex flex-col gap-3">
+<div class="bg-surface border border-glass-border rounded-xl p-3 reveal has-detail">
+<p class="text-xs font-mono font-bold mb-1" style="color:#d29922;">i=4 → v₄ (vecino: v₂)  <span class="text-[10px] opacity-50">▸ hover</span></p>
+<div class="code-block" style="font-size:0.58rem;">
+<span class="cm">// Reset available[1,2,3]=true (cu=3)</span><br/>
+<span class="cm">// v₂(color=2): available[2]=false</span><br/>
+c=1 → available[1]=<span class="kw">true</span> ✓<br/>
+color[v₄] ← <span class="nm">1</span> <span class="cm">// reuses color 1!</span>
+</div>
+<div class="detail-tip">
+<div class="detail-label">¿Por qué no hay conflicto con v₁?</div>
+                        v₄ solo está conectado a v₂ en este grafo (arista v₂-v₄). v₁ no es vecino de v₄, por lo que el color 1 no queda bloqueado. El algoritmo solo bloquea los colores de vecinos directos, no de todos los vértices del grafo.
+                    </div>
+</div>
+<div class="bg-surface border border-glass-border rounded-xl p-3 reveal has-detail">
+<p class="text-xs font-mono text-accent-1 font-bold mb-1">i=5 → v₅ (vecino: v₃)  <span class="text-[10px] text-accent-1/50">▸ hover</span></p>
+<div class="code-block" style="font-size:0.58rem;">
+<span class="cm">// Reset available[1,2,3]=true (cu=3)</span><br/>
+<span class="cm">// v₃(color=3): available[3]=false</span><br/>
+c=1 → available[1]=<span class="kw">true</span> ✓<br/>
+color[v₅] ← <span class="nm">1</span> <span class="cm">// reuses color 1!</span>
+</div>
+<div class="detail-tip">
+<div class="detail-label">Resultado y verificación final</div>
+                        Coloreo final: v₁=1, v₂=2, v₃=3, v₄=1, v₅=1. Verificamos I3: cada arista conecta vértices de colores distintos. v₁↔v₂(1≠2✓), v₁↔v₃(1≠3✓), v₁↔v₄(v₁=1, v₄=1) — espera, ¿hay arista v₁-v₄? En este grafo NO, solo v₂-v₄ y v₃-v₅. Revisar: v₂↔v₄(2≠1✓), v₃↔v₅(3≠1✓). Todo correcto.
+                    </div>
+</div>
+<div class="reveal bg-accent-2/10 border border-accent-2/25 rounded-lg p-3">
+<p class="text-xs font-semibold text-accent-2 mb-1">Resultado final · Postcondición Q cumplida</p>
+<p class="text-xs text-text-secondary">colors-used = 3 ≤ Δ(G)+1 = 4 ✓ · Todas las aristas tienen vértices de colores distintos ✓</p>
+</div>
+</div>
+<div class="reveal">
+<div class="bg-surface border border-glass-border rounded-xl p-4 text-center">
+<p class="text-xs text-text-muted uppercase tracking-widest mb-3">Grafo completamente coloreado</p>
+<svg class="w-full" viewbox="0 0 280 230">
+<line stroke="rgba(255,255,255,0.25)" stroke-width="2" x1="140" x2="55" y1="38" y2="115"></line>
+<line stroke="rgba(255,255,255,0.25)" stroke-width="2" x1="140" x2="225" y1="38" y2="115"></line>
+<line stroke="rgba(255,255,255,0.25)" stroke-width="2" x1="140" x2="140" y1="38" y2="155"></line>
+<line stroke="rgba(255,255,255,0.25)" stroke-width="2" x1="55" x2="85" y1="115" y2="195"></line>
+<line stroke="rgba(255,255,255,0.25)" stroke-width="2" x1="225" x2="195" y1="115" y2="195"></line>
+<line stroke="rgba(255,255,255,0.25)" stroke-width="2" x1="55" x2="225" y1="115" y2="115"></line>
+<circle cx="140" cy="38" fill="#1158a6" r="20" stroke="#58a6ff" stroke-width="2.5"></circle>
+<circle cx="55" cy="115" fill="#1a5c2a" r="20" stroke="#3fb950" stroke-width="2.5"></circle>
+<circle cx="225" cy="115" fill="#6b4c10" r="20" stroke="#d29922" stroke-width="2.5"></circle>
+<circle cx="85" cy="195" fill="#1158a6" r="20" stroke="#58a6ff" stroke-width="2.5"></circle>
+<circle cx="195" cy="195" fill="#1158a6" r="20" stroke="#58a6ff" stroke-width="2.5"></circle>
+<text dominant-baseline="middle" style="font-family:monospace;font-size:11px;fill:#58a6ff;font-weight:700;" text-anchor="middle" x="140" y="42">v₁</text>
+<text dominant-baseline="middle" style="font-family:monospace;font-size:11px;fill:#3fb950;font-weight:700;" text-anchor="middle" x="55" y="119">v₂</text>
+<text dominant-baseline="middle" style="font-family:monospace;font-size:11px;fill:#d29922;font-weight:700;" text-anchor="middle" x="225" y="119">v₃</text>
+<text dominant-baseline="middle" style="font-family:monospace;font-size:11px;fill:#58a6ff;font-weight:700;" text-anchor="middle" x="85" y="199">v₄</text>
+<text dominant-baseline="middle" style="font-family:monospace;font-size:11px;fill:#58a6ff;font-weight:700;" text-anchor="middle" x="195" y="199">v₅</text>
+<text style="font-size:11px;fill:#3fb950;" x="97" y="72">✓</text>
+<text style="font-size:11px;fill:#3fb950;" x="183" y="72">✓</text>
+<text style="font-size:11px;fill:#3fb950;" x="143" y="97">✓</text>
+<text style="font-size:11px;fill:#3fb950;" x="62" y="160">✓</text>
+<text style="font-size:11px;fill:#3fb950;" x="207" y="160">✓</text>
+<text style="font-size:11px;fill:#3fb950;" x="128" y="122">✓</text>
+</svg>
+<div class="flex justify-center gap-3 mt-2 flex-wrap">
+<span class="text-xs flex items-center gap-1"><span class="w-3 h-3 rounded-full" style="background:#58a6ff"></span>Color 1: v₁,v₄,v₅</span>
+<span class="text-xs flex items-center gap-1"><span class="w-3 h-3 rounded-full" style="background:#3fb950"></span>Color 2: v₂</span>
+<span class="text-xs flex items-center gap-1"><span class="w-3 h-3 rounded-full" style="background:#d29922"></span>Color 3: v₃</span>
+</div>
+<p class="text-xs text-accent-2 mt-2 font-semibold">colors-used=3 ≤ Δ(G)+1=4 ✓</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- ===== SLIDE 7 — EJEMPLO 2: GRAFO COMPLEJO (8 vértices, descripción + estado final) ===== -->
+<div class="slide slide-7" data-slide="7">
+<div class="gradient-mesh">
+<div class="blob" style="width:380px;height:380px;top:-80px;right:-80px;background:#d29922;opacity:0.07;"></div>
+<div class="blob" style="width:260px;height:260px;bottom:-50px;left:-40px;background:#58a6ff;opacity:0.06;"></div>
+</div>
+<div class="content">
+<div class="reveal mb-1"><span class="text-xs uppercase tracking-widest text-text-muted">Segundo Ejemplo · 8 vértices · Grafo complejo</span></div>
+<h2 class="font-display text-[clamp(1.4rem,2.6vw,2rem)] font-bold mb-3 reveal">Ejemplo 2: Grafo con triángulo interno (8 vértices, Δ=3)</h2>
+<div class="grid grid-cols-2 gap-5 items-start">
+<div class="reveal">
+<div class="bg-surface border border-glass-border rounded-xl p-3">
+<p class="text-xs text-text-muted uppercase tracking-widest mb-2 text-center">Coloreo final · colors-used = 3</p>
+<!-- Grafo: anillo externo a,b,c,d,e + triángulo interior f,g,h
+                         Aristas externas: a-b, b-c, c-d, d-e, e-a
+                         Aristas internas: f-g, g-h, h-f
+                         Aristas cruzadas: a-f, b-g, d-h
+                         Colores correctos (verificado):
+                           a=1(azul), b=2(verde), c=1(azul), d=2(verde), e=3(amarillo)
+                           f=2(verde), g=1(azul), h=3(amarillo)
+                         Verificación de aristas:
+                           a(1)-b(2)✓, b(2)-c(1)✓, c(1)-d(2)✓, d(2)-e(3)✓, e(3)-a(1)✓
+                           f(2)-g(1)✓, g(1)-h(3)✓, h(3)-f(2)✓
+                           a(1)-f(2)✓, b(2)-g(1)✓, d(2)-h(3)✓
+                    -->
+<svg class="w-full" viewbox="0 0 300 255">
+<!-- Outer pentagon edges -->
+<line stroke="rgba(255,255,255,0.22)" stroke-width="2" x1="150" x2="272" y1="22" y2="105"></line>
+<line stroke="rgba(255,255,255,0.22)" stroke-width="2" x1="272" x2="225" y1="105" y2="235"></line>
+<line stroke="rgba(255,255,255,0.22)" stroke-width="2" x1="225" x2="75" y1="235" y2="235"></line>
+<line stroke="rgba(255,255,255,0.22)" stroke-width="2" x1="75" x2="28" y1="235" y2="105"></line>
+<line stroke="rgba(255,255,255,0.22)" stroke-width="2" x1="28" x2="150" y1="105" y2="22"></line>
+<!-- Inner triangle edges -->
+<line stroke="rgba(255,255,255,0.22)" stroke-width="2" x1="150" x2="212" y1="92" y2="180"></line>
+<line stroke="rgba(255,255,255,0.22)" stroke-width="2" x1="212" x2="88" y1="180" y2="180"></line>
+<line stroke="rgba(255,255,255,0.22)" stroke-width="2" x1="88" x2="150" y1="180" y2="92"></line>
+<!-- Cross edges (outer-inner) -->
+<line stroke="rgba(255,255,255,0.15)" stroke-dasharray="4,3" stroke-width="1.5" x1="150" x2="150" y1="22" y2="92"></line>
+<line stroke="rgba(255,255,255,0.15)" stroke-dasharray="4,3" stroke-width="1.5" x1="272" x2="212" y1="105" y2="180"></line>
+<line stroke="rgba(255,255,255,0.15)" stroke-dasharray="4,3" stroke-width="1.5" x1="75" x2="88" y1="235" y2="180"></line>
+<!-- Outer nodes: a=1(azul), b=2(verde), c=1(azul), d=2(verde), e=3(amarillo) -->
+<circle cx="150" cy="22" fill="#1158a6" r="18" stroke="#58a6ff" stroke-width="2.5"></circle>
+<circle cx="272" cy="105" fill="#1a5c2a" r="18" stroke="#3fb950" stroke-width="2.5"></circle>
+<circle cx="225" cy="235" fill="#1158a6" r="18" stroke="#58a6ff" stroke-width="2.5"></circle>
+<circle cx="75" cy="235" fill="#1a5c2a" r="18" stroke="#3fb950" stroke-width="2.5"></circle>
+<circle cx="28" cy="105" fill="#6b4c10" r="18" stroke="#d29922" stroke-width="2.5"></circle>
+<!-- Inner nodes: f=2(verde), g=1(azul), h=3(amarillo) -->
+<circle cx="150" cy="92" fill="#1a5c2a" r="18" stroke="#3fb950" stroke-width="2.5"></circle>
+<circle cx="212" cy="180" fill="#1158a6" r="18" stroke="#58a6ff" stroke-width="2.5"></circle>
+<circle cx="88" cy="180" fill="#6b4c10" r="18" stroke="#d29922" stroke-width="2.5"></circle>
+<!-- Labels -->
+<text dominant-baseline="middle" style="font-family:monospace;font-size:10px;fill:#58a6ff;font-weight:700;" text-anchor="middle" x="150" y="26">a</text>
+<text dominant-baseline="middle" style="font-family:monospace;font-size:10px;fill:#3fb950;font-weight:700;" text-anchor="middle" x="272" y="109">b</text>
+<text dominant-baseline="middle" style="font-family:monospace;font-size:10px;fill:#58a6ff;font-weight:700;" text-anchor="middle" x="225" y="239">c</text>
+<text dominant-baseline="middle" style="font-family:monospace;font-size:10px;fill:#3fb950;font-weight:700;" text-anchor="middle" x="75" y="239">d</text>
+<text dominant-baseline="middle" style="font-family:monospace;font-size:10px;fill:#d29922;font-weight:700;" text-anchor="middle" x="28" y="109">e</text>
+<text dominant-baseline="middle" style="font-family:monospace;font-size:10px;fill:#3fb950;font-weight:700;" text-anchor="middle" x="150" y="96">f</text>
+<text dominant-baseline="middle" style="font-family:monospace;font-size:10px;fill:#58a6ff;font-weight:700;" text-anchor="middle" x="212" y="184">g</text>
+<text dominant-baseline="middle" style="font-family:monospace;font-size:10px;fill:#d29922;font-weight:700;" text-anchor="middle" x="88" y="184">h</text>
+</svg>
+<div class="flex justify-center gap-3 mt-2 flex-wrap">
+<span class="text-xs flex items-center gap-1"><span class="w-3 h-3 rounded-full" style="background:#58a6ff"></span>C1: a,c,g</span>
+<span class="text-xs flex items-center gap-1"><span class="w-3 h-3 rounded-full" style="background:#3fb950"></span>C2: b,d,f</span>
+<span class="text-xs flex items-center gap-1"><span class="w-3 h-3 rounded-full" style="background:#d29922"></span>C3: e,h</span>
+</div>
+<p class="text-xs text-accent-2 mt-2 text-center font-semibold">3 ≤ Δ(G)+1 = 4 ✓ · Sin conflictos ✓</p>
+</div>
+</div>
+<div class="flex flex-col gap-3">
+<div class="explain-box reveal has-detail">
+<p class="text-xs uppercase tracking-widest text-accent-2 font-semibold mb-2">¿Por qué este grafo es interesante? <span class="text-accent-2/50 text-[10px] ml-1">▸ hover</span></p>
+<div class="detail-tip">
+<div class="detail-label">¿Qué es una 3-clique?</div>
+                        Una clique es un subconjunto de vértices donde todos están conectados entre sí. Una 3-clique (K₃) tiene 3 vértices y 3 aristas formando un triángulo. Por definición, una k-clique requiere al menos k colores: cada vértice es vecino de todos los demás en la clique. Por eso el triángulo f-g-h fuerza χ(G) ≥ 3.
+                    </div>
+</div>
+<div class="reveal bg-surface border border-glass-border rounded-xl p-3">
+<p class="text-xs uppercase tracking-widest text-accent-1 font-semibold mb-2">Estructura del grafo</p>
+<ul class="text-xs text-text-secondary space-y-1">
+<li>• <strong class="text-text">8 vértices:</strong> a, b, c, d, e (pentágono) + f, g, h (triángulo)</li>
+<li>• <strong class="text-text">11 aristas:</strong> 5 del pentágono + 3 del triángulo + 3 cruzadas (a-f, b-g, d-h)</li>
+<li>• <strong class="text-text">Grado máximo Δ(G) = 3</strong> (a y b tienen grado 3)</li>
+<li>• Coloreo óptimo: 3 colores (el greedy lo alcanza en este caso)</li>
+</ul>
+</div>
+<div class="inv-card reveal has-detail" style="border-color:#d29922;">
+<p class="text-xs font-semibold text-accent-3 mb-1">Resultado ¿Por qué 3 y no 4? <span class="text-[10px] text-accent-3/50">▸ hover</span></p>
+<div class="detail-tip">
+<div class="detail-label">Teorema de Brooks (1941)</div>
+                        Para cualquier grafo G que NO sea un grafo completo Kₙ ni un ciclo impar, se cumple χ(G) ≤ Δ(G). Este grafo (8 vértices, no completo, pentágono par) cumple la condición de Brooks y por eso el greedy puede lograr 3 colores = Δ(G), que es óptimo aquí.
+                    </div>
+</div>
+<div class="reveal bg-accent-1/08 border border-accent-1/20 rounded-lg p-2">
+<p class="text-xs text-text-muted">➡ La siguiente diapositiva muestra las 8 iteraciones del greedy paso a paso en este grafo.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- ===== SLIDE 8 — EJEMPLO 2: ITERACIONES i=1..8 ===== -->
+<div class="slide slide-8" data-slide="8">
+<div class="gradient-mesh">
+<div class="blob" style="width:360px;height:360px;top:-80px;left:-80px;background:#d29922;opacity:0.07;"></div>
+<div class="blob" style="width:240px;height:240px;bottom:-50px;right:-40px;background:#3fb950;opacity:0.06;"></div>
+</div>
+<div class="content">
+<div class="reveal mb-1"><span class="text-xs uppercase tracking-widest text-text-muted">Ejemplo 2 · 8 vértices — Todas las iteraciones del greedy</span></div>
+<h2 class="font-display text-[clamp(1.3rem,2.4vw,1.9rem)] font-bold mb-3 reveal">Ejecución iteración a iteración (i = 1 … 8)</h2>
+<!-- Orden de vértices: a,b,c,d,e,f,g,h (índices 1..8)
+             Aristas: a-b, a-e, a-f | b-c, b-g | c-d | d-e, d-h | e (solo ya listadas) | f-g, f-h | g-h
+        -->
+<div class="grid grid-cols-4 gap-2 reveal">
+<div class="bg-surface border border-glass-border rounded-lg p-2 has-detail">
+<p class="text-[10px] font-mono font-bold text-accent-1 mb-1">i=1 → a</p>
+<div class="code-block" style="font-size:0.5rem;">
+<span class="cm">// No j&lt;1 neighbors</span><br/>
+c=1&gt;cu(0)→cu=<span class="nm">1</span><br/>
+color[a]←<span class="nm">1</span> 🔵
+                </div>
+<div class="detail-tip">
+<div class="detail-label">Detalle i=1 (a)</div>
+                    Primer vértice. Sin vecinos anteriores. Siempre toma el color 1 y lo crea. Estado: a=1, cu=1.
+                </div>
+</div>
+<div class="bg-surface border border-glass-border rounded-lg p-2 has-detail">
+<p class="text-[10px] font-mono font-bold text-accent-2 mb-1">i=2 → b (vecino: a)</p>
+<div class="code-block" style="font-size:0.5rem;">
+<span class="cm">// a(c=1): avail[1]=false</span><br/>
+c=2&gt;cu(1)→cu=<span class="nm">2</span><br/>
+color[b]←<span class="nm">2</span> 🟢
+                </div>
+<div class="detail-tip">
+<div class="detail-label">Detalle i=2 (b)</div>
+                    b es vecino de a (color 1). Color 1 bloqueado. Crea color 2. Estado: a=1, b=2, cu=2.
+                </div>
+</div>
+<div class="bg-surface border border-glass-border rounded-lg p-2 has-detail">
+<p class="text-[10px] font-mono font-bold text-accent-1 mb-1">i=3 → c (vecino: b)</p>
+<div class="code-block" style="font-size:0.5rem;">
+<span class="cm">// b(c=2): avail[2]=false</span><br/>
+c=1→avail[1]=true ✓<br/>
+color[c]←<span class="nm">1</span> 🔵
+                </div>
+<div class="detail-tip">
+<div class="detail-label">Detalle i=3 (c)</div>
+                    c solo está conectado a b (color 2). El color 1 queda libre. Reutiliza el color 1. cu no cambia. Estado: a=1, b=2, c=1, cu=2.
+                </div>
+</div>
+<div class="bg-surface border border-glass-border rounded-lg p-2 has-detail">
+<p class="text-[10px] font-mono font-bold text-accent-2 mb-1">i=4 → d (vecinos: c)</p>
+<div class="code-block" style="font-size:0.5rem;">
+<span class="cm">// c(c=1): avail[1]=false</span><br/>
+c=2→avail[2]=true ✓<br/>
+color[d]←<span class="nm">2</span> 🟢
+                </div>
+<div class="detail-tip">
+<div class="detail-label">Detalle i=4 (d)</div>
+                    d conectado a c (color 1). Color 1 bloqueado, color 2 libre. Reutiliza el color 2. Estado: a=1, b=2, c=1, d=2, cu=2.
+                </div>
+</div>
+<div class="bg-surface border border-glass-border rounded-lg p-2 has-detail">
+<p class="text-[10px] font-mono font-bold text-accent-3 mb-1">i=5 → e (vecinos: d,a)</p>
+<div class="code-block" style="font-size:0.5rem;">
+<span class="cm">// d(2):avail[2]=false</span><br/>
+<span class="cm">// a(1):avail[1]=false</span><br/>
+c=3&gt;cu(2)→cu=<span class="nm">3</span><br/>
+color[e]←<span class="nm">3</span> 🟡
+                </div>
+<div class="detail-tip">
+<div class="detail-label">Detalle i=5 (e)</div>
+                    e es vecino de d (color 2) y a (color 1). Ambos bloqueados. No hay color disponible → crea el color 3. Estado: ..., e=3, cu=3.
+                </div>
+</div>
+<div class="bg-surface border border-glass-border rounded-lg p-2 has-detail">
+<p class="text-[10px] font-mono font-bold text-accent-2 mb-1">i=6 → f (vecino: a)</p>
+<div class="code-block" style="font-size:0.5rem;">
+<span class="cm">// a(1): avail[1]=false</span><br/>
+c=2→avail[2]=true ✓<br/>
+color[f]←<span class="nm">2</span> 🟢
+                </div>
+<div class="detail-tip">
+<div class="detail-label">Detalle i=6 (f)</div>
+                    f conectado (hacia atrás) a a (color 1). Solo el color 1 queda bloqueado. El color 2 está libre → reutiliza. Estado: ..., f=2, cu=3.
+                </div>
+</div>
+<div class="bg-surface border border-glass-border rounded-lg p-2 has-detail">
+<p class="text-[10px] font-mono font-bold text-accent-1 mb-1">i=7 → g (vecinos: b,f)</p>
+<div class="code-block" style="font-size:0.5rem;">
+<span class="cm">// b(2):avail[2]=false</span><br/>
+<span class="cm">// f(2):avail[2]=false (same)</span><br/>
+c=1→avail[1]=true ✓<br/>
+color[g]←<span class="nm">1</span> 🔵
+                </div>
+<div class="detail-tip">
+<div class="detail-label">Detalle i=7 (g)</div>
+                    g conectado a b (color 2) y f (color 2). Ambos bloquean el mismo color 2. El color 1 está libre → reutiliza. Estado: ..., g=1, cu=3.
+                </div>
+</div>
+<div class="bg-surface border border-glass-border rounded-lg p-2 has-detail">
+<p class="text-[10px] font-mono font-bold text-accent-3 mb-1">i=8 → h (vecinos: d,f,g)</p>
+<div class="code-block" style="font-size:0.5rem;">
+<span class="cm">// d(2):avail[2]=false</span><br/>
+<span class="cm">// f(2):avail[2]=false</span><br/>
+<span class="cm">// g(1):avail[1]=false</span><br/>
+c=3→avail[3]=true ✓<br/>
+color[h]←<span class="nm">3</span> 🟡
+                </div>
+<div class="detail-tip">
+<div class="detail-label">Detalle i=8 (h)</div>
+                    h conectado a d(2), f(2), g(1). Colores 1 y 2 bloqueados. Color 3 disponible → reutiliza. NO crea nuevo color. Estado: h=3, cu=3. ¡Terminado!
+                </div>
+</div>
+</div>
+<div class="reveal mt-3 grid grid-cols-2 gap-3">
+<div class="bg-accent-2/10 border border-accent-2/25 rounded-lg p-2">
+<p class="text-xs font-semibold text-accent-2 mb-1">Resumen del coloreo final</p>
+<p class="text-xs text-text-secondary font-mono">a=1, b=2, c=1, d=2, e=3, f=2, g=1, h=3</p>
+<p class="text-xs text-accent-2 mt-1">colors-used = 3 ≤ Δ(G)+1 = 4 ✓</p>
+</div>
+<div class="bg-accent-1/08 border border-accent-1/20 rounded-lg p-2 has-detail">
+<p class="text-xs font-semibold text-accent-1 mb-1">Verificación I3 (todas las aristas) <span class="text-[10px] text-accent-1/50">▸ hover</span></p>
+<div class="detail-tip">
+<div class="detail-label">Verificación completa de I3</div>
+                    Las 11 aristas del grafo, verificadas una a una: a-b(1≠2✓), a-e(1≠3✓), a-f(1≠2✓), b-c(2≠1✓), b-g(2≠1✓), c-d(1≠2✓), d-e(2≠3✓), d-h(2≠3✓), f-g(2≠1✓), f-h(2≠3✓), g-h(1≠3✓). Las 11 pasan la verificación. El coloreo es completamente válido.
+                </div>
+</div>
+</div>
+</div>
+</div>
+<!-- ===== SLIDE 9 — TERNA DE HOARE ===== -->
+<div class="slide slide-9" data-slide="9">
+<div class="gradient-mesh">
+<div class="blob" style="width:400px;height:400px;top:-100px;right:-100px;background:#d29922;opacity:0.08;"></div>
+<div class="blob" style="width:280px;height:280px;bottom:-60px;left:-60px;background:#58a6ff;opacity:0.07;"></div>
+</div>
+<canvas class="particle-canvas-ambient" style="position:absolute;inset:0;z-index:1;"></canvas>
+<div class="content">
+<div class="reveal mb-1"><span class="text-xs uppercase tracking-widest text-text-muted">Verificación Formal</span></div>
+<h2 class="font-display text-[clamp(1.5rem,2.8vw,2.2rem)] font-bold mb-4 reveal">La Terna de Hoare: {P} S {Q}</h2>
+<div class="explain-box reveal mb-3 has-detail" style="background:rgba(88,166,255,0.06);border-color:rgba(88,166,255,0.2);">
+<div class="detail-tip">
+<div class="detail-label">La lógica de Hoare explicada</div>
+                La notación {P} S {Q} fue propuesta por Tony Hoare en 1969. P es la <em>precondición</em> (lo que se asume antes de ejecutar S), Q es la <em>postcondición</em> (lo que se garantiza si S termina). Los invariantes de bucle son el "puente" que conecta P con Q a través de las iteraciones: si se cumplen antes, durante y después de cada iteración, y el bucle termina, entonces Q se cumple al final.
+            </div>
+</div>
+<div class="grid grid-cols-3 gap-3 reveal mb-3">
+<div class="bg-accent-1/10 border border-accent-1/30 rounded-xl p-3 text-center">
+<p class="text-xs uppercase tracking-widest text-accent-1 mb-2 font-semibold">Precondición P<br/><span class="text-text-muted normal-case tracking-normal">(qué debe ser cierto ANTES)</span></p>
+<p class="text-xs text-text-secondary font-mono">G=(V,E) grafo no dirigido simple</p>
+<p class="text-xs text-text-secondary font-mono mt-1">V = {v₁,...,vₙ}, V ≠ ∅</p>
+</div>
+<div class="bg-surface border border-glass-border rounded-xl p-3 text-center">
+<p class="text-xs uppercase tracking-widest text-text-muted mb-2 font-semibold">Programa S<br/><span class="normal-case tracking-normal">El algoritmo greedy</span></p>
+<p class="text-xs text-text-secondary">Inicialización + bucle principal de coloreo</p>
+</div>
+<div class="bg-accent-2/10 border border-accent-2/30 rounded-xl p-3 text-center">
+<p class="text-xs uppercase tracking-widest text-accent-2 mb-2 font-semibold">Postcondición Q<br/><span class="text-text-muted normal-case tracking-normal">(qué se garantiza DESPUÉS)</span></p>
+<p class="text-xs text-text-secondary font-mono">∀(u,v)∈E: color[u] ≠ color[v]</p>
+<p class="text-xs text-text-secondary font-mono mt-1">colors-used ≤ Δ(G)+1</p>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-3">
+<div class="inv-card reveal has-detail" style="border-color:#58a6ff;">
+<span class="text-xs font-mono text-accent-1 font-bold">I0 — Sin huecos en los colores <span class="text-[10px] opacity-50">▸</span></span>
+<div class="detail-tip"><div class="detail-label">Por qué importa I0</div>Si existiera un hueco (e.g., color 3 asignado pero no el 2), el reinicio parcial dejaría available[3] con valor residual de la iteración anterior, lo que haría que el algoritmo creyera erróneamente que ese color está bloqueado o libre cuando no lo está.</div>
+</div>
+<div class="inv-card reveal has-detail" style="border-color:#3fb950;">
+<span class="text-xs font-mono text-accent-2 font-bold">I1 — Coloreo previo válido <span class="text-[10px] opacity-50">▸</span></span>
+<div class="detail-tip"><div class="detail-label">I1 implica Q al terminar</div>Cuando el bucle termina, i=n+1, lo que significa que I1 aplica a todos los vértices v₁...vₙ. Todos están coloreados correctamente. Combinado con I3, esto es exactamente la postcondición Q.</div>
+</div>
+<div class="inv-card reveal has-detail" style="border-color:#d29922;">
+<span class="text-xs font-mono text-accent-3 font-bold">I2 — Cota de colores garantizada <span class="text-[10px] opacity-50">▸</span></span>
+<div class="detail-tip"><div class="detail-label">Demostración de I2</div>Al crear un nuevo color, todos los colores actuales {1,...,cu} están bloqueados, cada uno por un vecino distinto. Hay a lo sumo Δ(G) vecinos → cu ≤ Δ(G). Después del incremento: cu+1 ≤ Δ(G)+1.</div>
+</div>
+<div class="inv-card reveal has-detail" style="border-color:#bc8cff;">
+<span class="text-xs font-mono font-bold" style="color:#bc8cff;">I3 — Adyacentes con colores distintos <span class="text-[10px] opacity-50">▸</span></span>
+<div class="detail-tip"><div class="detail-label">Cómo se mantiene I3</div>Al asignar color[vᵢ]=c, sabemos que available[c]=true, lo que significa que ningún vecino vⱼ (j&lt;i) tiene color c. Por tanto, ninguna arista (vᵢ,vⱼ) con j&lt;i genera conflicto. Los vecinos con j&gt;i aún no están coloreados.</div>
+</div>
+</div>
+</div>
+</div>
+<!-- ===== SLIDE 10 — DEMOSTRACIÓN (paso inductivo) ===== -->
+<div class="slide slide-10" data-slide="10">
+<div class="gradient-mesh">
+<div class="blob" style="width:380px;height:380px;top:-80px;left:-80px;background:#58a6ff;opacity:0.07;"></div>
+<div class="blob" style="width:260px;height:260px;bottom:-50px;right:-40px;background:#d29922;opacity:0.06;"></div>
+</div>
+<div class="content">
+<div class="reveal mb-1"><span class="text-xs uppercase tracking-widest text-text-muted">Verificación Formal · Demostración</span></div>
+<h2 class="font-display text-[clamp(1.5rem,2.8vw,2.2rem)] font-bold mb-3 reveal">¿Los invariantes se mantienen? (Paso inductivo)</h2>
+<div class="explain-box reveal mb-3 has-detail" style="background:rgba(88,166,255,0.06);border-color:rgba(88,166,255,0.2);">
+<div class="detail-tip"><div class="detail-label">¿Por qué inducción?</div>No podemos verificar manualmente cada posible grafo — hay infinitos. La inducción matemática nos permite demostrar una propiedad para todos los casos de una vez: si funciona para la base (antes de i=1) y si funciona para el paso i=k implica que funciona para i=k+1, entonces funciona para TODOS los valores de i.</div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="flex flex-col gap-3">
+<div class="bg-surface border border-glass-border rounded-xl p-4 reveal">
+<p class="text-xs uppercase tracking-widest text-accent-1 font-semibold mb-2">Base: antes de i=1</p>
+<p class="text-xs text-text-secondary">Antes del primer vértice: <code class="text-accent-1">color[·]=0</code>, <code>cu=0</code>, <code>available[·]=true</code>. Todos los invariantes se cumplen trivialmente: ningún vértice está coloreado, no hay conflictos posibles, 0 ≤ Δ(G)+1.</p>
+</div>
+<div class="bg-surface border border-glass-border rounded-xl p-4 reveal has-detail">
+<p class="text-xs uppercase tracking-widest text-accent-2 font-semibold mb-2">Caso 1: reutilizamos un color (c ≤ cu) <span class="text-[10px] text-accent-2/50">▸</span></p>
+<ul class="text-xs text-text-secondary space-y-1">
+<li>• available[c]=true → ningún vecino usa c → <strong class="text-accent-2">I3 se preserva</strong></li>
+<li>• cu no cambia → <strong class="text-accent-2">I2 sigue válido</strong></li>
+<li>• El color c está dentro del rango → <strong class="text-accent-2">I0 e I1 se mantienen</strong></li>
+</ul>
+<div class="detail-tip"><div class="detail-label">¿Por qué available[c]=true garantiza I3?</div>Si available[c]=true, significa que el bucle "for each neighbor vj" no marcó ese color como false. Eso ocurre solo cuando ningún vecino vⱼ (j&lt;i) tiene color[vⱼ]=c. Así, al asignar color[vᵢ]=c, ninguna arista (vᵢ,vⱼ) viola I3.</div>
+</div>
+<div class="bg-surface border border-glass-border rounded-xl p-4 reveal has-detail">
+<p class="text-xs uppercase tracking-widest text-accent-3 font-semibold mb-2">Caso 2: creamos un color nuevo (c &gt; cu) <span class="text-[10px] text-accent-3/50">▸</span></p>
+<ul class="text-xs text-text-secondary space-y-1">
+<li>• Todos los colores {1,...,cu} bloqueados → vₖ tiene ≥ cu vecinos distintos</li>
+<li>• vₖ tiene a lo sumo Δ(G) vecinos → <code class="text-accent-3">cu &lt; Δ(G)</code></li>
+<li>• Nuevo cu = old_cu+1 ≤ Δ(G)+1 → <strong class="text-accent-3">I2 preservado</strong></li>
+<li>• Nuevo color es único → <strong class="text-accent-3">I3 y I0 preservados</strong></li>
+</ul>
+<div class="detail-tip"><div class="detail-label">¿Por qué cu &lt; Δ(G) en ese momento?</div>Si todos los cu colores actuales están bloqueados, cada uno lo está por un vecino distinto de vₖ (un vecino no puede bloquear dos colores distintos). Entonces vₖ tiene al menos cu vecinos procesados → cu ≤ grado(vₖ) ≤ Δ(G). Por tanto cu ≤ Δ(G), y cu+1 ≤ Δ(G)+1.</div>
+</div>
+</div>
+<div class="flex flex-col gap-3">
+<div class="reveal">
+<p class="text-xs uppercase tracking-widest text-text-muted mb-2">Clave de la demostración (I2)</p>
+<div class="code-block" style="font-size:0.6rem;">
+<span class="cm">// At vertex vₖ — worst case analysis:</span>
+neighbors_before(vₖ) ≤ Δ(G)     <span class="cm">// by definition of Δ</span>
+colors_blocked ≤ neighbors_before(vₖ) ≤ Δ(G)<br/>
+<span class="cm">// So in range {1,...,Δ(G)+1}:</span>
+<span class="cm">// AT LEAST 1 slot is ALWAYS free!</span>
+∴ c ≤ Δ(G)+1
+∴ colors-used ≤ Δ(G)+1   <span class="cm">// I2 maintained ✓</span>
+</div>
+</div>
+<div class="reveal bg-accent-2/10 border border-accent-2/25 rounded-xl p-4">
+<p class="text-xs uppercase tracking-widest text-accent-2 font-semibold mb-2">Conclusión de la inducción</p>
+<p class="text-xs text-text-secondary">Después de procesar vₖ, los 4 invariantes siguen siendo verdaderos. Por <strong class="text-text">inducción matemática</strong>, se mantienen para toda la ejecución. Cuando el bucle termina (i = n+1), I1 e I3 directamente implican la <strong class="text-accent-2">postcondición Q</strong>.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- ===== SLIDE 11 — TERMINACIÓN ===== -->
+<div class="slide slide-11" data-slide="11">
+<div class="gradient-mesh">
+<div class="blob" style="width:380px;height:380px;top:-80px;right:-80px;background:#3fb950;opacity:0.08;"></div>
+<div class="blob" style="width:260px;height:260px;bottom:-50px;left:-40px;background:#58a6ff;opacity:0.06;"></div>
+</div>
+<div class="content">
+<div class="reveal mb-1"><span class="text-xs uppercase tracking-widest text-text-muted">Verificación Formal · Terminación</span></div>
+<h2 class="font-display text-[clamp(1.6rem,3vw,2.4rem)] font-bold mb-3 reveal">¿Por qué el algoritmo siempre termina?</h2>
+<div class="explain-box reveal mb-4 has-detail" style="background:rgba(63,185,80,0.06);border-color:rgba(63,185,80,0.2);">
+<div class="detail-tip"><div class="detail-label">¿Por qué necesitamos esto?</div>Demostrar que un algoritmo termina no es trivial — hay algoritmos que se ejecutan para siempre (bucles infinitos) cuando no se diseñan correctamente. La función de cota es la herramienta formal que garantiza terminación: si existe una función que siempre es positiva y siempre decrece, el bucle no puede ejecutarse infinitamente.</div>
+</div>
+<div class="grid grid-cols-3 gap-4">
+<div class="bg-glass-bg border border-glass-border rounded-xl p-4 reveal has-detail">
+<p class="text-2xl mb-2">🔢</p>
+<p class="text-xs uppercase tracking-widest text-accent-1 font-semibold mb-2">Bucle externo (for i=1 to n)</p>
+<p class="font-mono text-accent-1 text-base font-bold mb-2">Cota: n − i + 1</p>
+<div class="detail-tip"><div class="detail-label">¿Por qué n es finito?</div>La precondición P requiere que V={v₁,...,vₙ} con n conocido y finito. Sin esta condición, el bucle podría no tener cota superior y ejecutarse infinitamente.</div>
+</div>
+<div class="bg-glass-bg border border-glass-border rounded-xl p-4 reveal has-detail">
+<p class="text-2xl mb-2">🔄</p>
+<p class="text-xs uppercase tracking-widest text-accent-2 font-semibold mb-2">Bucle de reinicio (for c=1 to cu)</p>
+<p class="font-mono text-accent-2 text-base font-bold mb-2">Cota: cu − c + 1</p>
+<div class="detail-tip"><div class="detail-label">Interacción con I2</div>El bucle de reinicio recorre c de 1 hasta colors-used. Por I2, colors-used ≤ Δ(G)+1. Entonces este bucle ejecuta a lo sumo Δ(G)+1 veces por iteración del bucle externo — siempre finito.</div>
+</div>
+<div class="bg-glass-bg border border-glass-border rounded-xl p-4 reveal has-detail">
+<p class="text-2xl mb-2">🔍</p>
+<p class="text-xs uppercase tracking-widest text-accent-3 font-semibold mb-2">Búsqueda de color (while c ≤ cu)</p>
+<p class="font-mono text-accent-3 text-base font-bold mb-2">Cota: cu − c + 2</p>
+<div class="detail-tip"><div class="detail-label">¿Por qué siempre hay un color disponible?</div>El rango {1,...,Δ(G)+1} tiene Δ(G)+1 posiciones. Un vértice puede bloquear a lo sumo Δ(G) de ellas (un bloqueo por vecino, a lo sumo Δ(G) vecinos). Por lo tanto, al menos 1 posición siempre queda libre. El while siempre encuentra su condición de parada.</div>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4 mt-3">
+<div class="inv-card reveal" style="border-color:#58a6ff;">
+<p class="text-xs uppercase tracking-widest text-accent-1 font-semibold mb-1">Terminación global</p>
+<p class="text-xs text-text-secondary">Los tres bucles son finitos y acotados. El algoritmo termina en tiempo <code class="text-accent-1">O(n · (Δ(G)+1))</code> → <code>O(n + m)</code> con lista de adyacencia.</p>
+</div>
+<div class="inv-card reveal has-detail" style="border-color:#3fb950;">
+<p class="text-xs uppercase tracking-widest text-accent-2 font-semibold mb-1">¿Y si el grafo fuera infinito? <span class="text-[10px] text-accent-2/50">▸</span></p>
+<div class="detail-tip"><div class="detail-label">La precondición como guardiana de la terminación</div>La precondición P no solo define "qué tipo de grafo acepta el algoritmo" — también es lo que garantiza que el algoritmo termine. Si P no requiriera V finito, el bucle for tendría cota n = ∞ y la función de cota n-i+1 nunca llegaría a 0.</div>
+</div>
+</div>
+</div>
+</div>
+<!-- ===== SLIDE 12 — χ vs Δ + REFLEXIÓN ===== -->
+<div class="slide slide-12" data-slide="12">
+<div class="gradient-mesh">
+<div class="blob" style="width:360px;height:360px;top:-80px;right:-80px;background:#d29922;opacity:0.08;"></div>
+<div class="blob" style="width:240px;height:240px;bottom:-50px;left:-40px;background:#3fb950;opacity:0.06;"></div>
+</div>
+<div class="content">
+<div class="reveal mb-1"><span class="text-xs uppercase tracking-widest text-text-muted">Reflexión · Límite Superior y Teorema de Brooks</span></div>
+<h2 class="font-display text-[clamp(1.5rem,2.8vw,2.2rem)] font-bold mb-3 reveal">χ(G) = Δ(G)+1 vs. χ(G) &lt; Δ(G)+1</h2>
+<div class="grid grid-cols-2 gap-5">
+<div class="flex flex-col gap-3">
+<div class="reveal bg-accent-3/10 border border-accent-3/30 rounded-xl p-4 has-detail">
+<p class="text-xs uppercase tracking-widest text-accent-3 font-semibold mb-2">Casos donde χ(G) = Δ(G)+1 (el peor caso) <span class="text-[10px] text-accent-3/50">▸</span></p>
+<ul class="text-sm text-text-secondary space-y-2">
+<li>🔺 <strong class="text-text">Grafo completo Kₙ:</strong> todos conectados con todos. Necesita n colores = Δ+1</li>
+<li>🔺 <strong class="text-text">Ciclos impares C₃,C₅,C₇:</strong> Δ=2, pero χ=3 = Δ+1</li>
+</ul>
+<div class="detail-tip"><div class="detail-label">¿Por qué los ciclos impares necesitan Δ+1?</div>En un ciclo impar Cₙ (n impar), al intentar 2-colorear, el "último" vértice del ciclo siempre choca con el color del primer vértice. Esto se debe a la paridad impar. Con 3 colores siempre es posible. Ejemplo: C₅ (pentágono) necesita exactamente 3 colores aunque Δ=2.</div>
+</div>
+<div class="reveal bg-accent-2/10 border border-accent-2/30 rounded-xl p-4 has-detail">
+<p class="text-xs uppercase tracking-widest text-accent-2 font-semibold mb-2">Casos donde χ(G) &lt; Δ(G)+1 <span class="text-[10px] text-accent-2/50">▸</span></p>
+<ul class="text-sm text-text-secondary space-y-2">
+<li>✅ <strong class="text-text">Grafo bipartito:</strong> siempre χ=2, sin importar Δ</li>
+<li>✅ <strong class="text-text">Árbol:</strong> χ=2 (caso especial de bipartito)</li>
+<li>✅ <strong class="text-text">Ciclo par C₄,C₆:</strong> χ=2, Δ=2 → χ &lt; Δ+1</li>
+<li>✅ <strong class="text-text">Nuestro Ejemplo 2:</strong> χ=3, Δ=3 → χ = Δ &lt; Δ+1</li>
+</ul>
+<div class="detail-tip"><div class="detail-label">¿Qué es un grafo bipartito?</div>Un grafo donde los vértices se dividen en dos grupos A y B tal que todas las aristas van de A a B (ninguna dentro del mismo grupo). Siempre se puede 2-colorear: todos los vértices de A toman el color 1 y todos los de B el color 2. Los compiladores modelan el conflicto de variables como grafos que suelen ser cercanos a bipartitos.</div>
+</div>
+</div>
+<div class="flex flex-col gap-3">
+<div class="reveal bg-surface border border-glass-border rounded-xl p-4 has-detail">
+<p class="text-xs uppercase tracking-widest text-text-muted font-semibold mb-2">Teorema de Brooks (1941) <span class="text-[10px] text-text-muted/70">▸ hover</span></p>
+<div class="bg-accent-1/10 border border-accent-1/20 rounded-lg p-3 mb-2 text-center">
+<p class="font-mono text-accent-1 text-base">χ(G) ≤ Δ(G)</p>
+<p class="text-xs text-text-muted mt-1">excepto Kₙ o ciclos impares</p>
+</div>
+<div class="detail-tip"><div class="detail-label">Relación entre Brooks e I2</div>El Teorema de Brooks es más fuerte que I2: dice que en casi todos los grafos χ(G) ≤ Δ(G). El invariante I2 solo garantiza ≤ Δ(G)+1 porque el greedy no siempre es óptimo. Para alcanzar el óptimo de Brooks se necesitan algoritmos más sofisticados (no greedy simple).</div>
+</div>
+<div class="reveal bg-surface border border-glass-border rounded-xl p-4">
+<p class="text-xs uppercase tracking-widest text-text-muted font-semibold mb-2">Limitación del greedy</p>
+<p class="text-xs text-text-secondary mb-2">El greedy <strong class="text-accent-3">no siempre es óptimo</strong>. El resultado depende del orden de procesamiento. Ejemplo: un orden "malo" puede usar más colores de los necesarios.</p>
+<p class="text-xs text-text-secondary">Encontrar el coloreo óptimo (χ(G) exacto) es <strong class="text-accent-3">NP-completo</strong>: no se conoce algoritmo eficiente para todos los casos. Por eso el greedy, aunque no siempre óptimo, es muy útil en la práctica.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- ===== SLIDE 13 — APLICACIONES + CONCLUSIONES ===== -->
+<div class="slide slide-13" data-slide="13">
+<div class="gradient-mesh">
+<div class="blob" style="width:500px;height:500px;top:-130px;right:-130px;background:#58a6ff;opacity:0.13;"></div>
+<div class="blob" style="width:360px;height:360px;bottom:-90px;left:-70px;background:#3fb950;opacity:0.10;"></div>
+<div class="blob" style="width:240px;height:240px;top:35%;left:18%;background:#d29922;opacity:0.08;"></div>
+</div>
+<canvas class="particle-canvas" style="position:absolute;inset:0;z-index:1;"></canvas>
+<div class="content">
+<div class="reveal mb-1"><span class="text-xs uppercase tracking-widest text-text-muted">Reflexión · Aplicaciones y Conclusiones</span></div>
+<h2 class="font-display text-[clamp(1.6rem,3vw,2.4rem)] font-bold mb-4 reveal">¿Para qué sirve en la vida real?</h2>
+<div class="grid grid-cols-3 gap-3 mb-4">
+<div class="bg-glass-bg border border-glass-border rounded-xl p-4 hover:-translate-y-1 hover:shadow-xl transition reveal has-detail">
+<p class="text-2xl mb-2">📡</p>
+<p class="text-sm font-semibold text-text mb-1">Frecuencias de radio</p>
+<div class="detail-tip"><div class="detail-label">Cómo se modela</div>Cada antena es un vértice. Dos antenas se conectan con una arista si su rango se superpone. El número cromático del grafo = número mínimo de frecuencias necesarias para que no haya interferencia.</div>
+</div>
+<div class="bg-glass-bg border border-glass-border rounded-xl p-4 hover:-translate-y-1 hover:shadow-xl transition reveal has-detail">
+<p class="text-2xl mb-2">💻</p>
+<p class="text-sm font-semibold text-text mb-1">Compiladores (registros)</p>
+<div class="detail-tip"><div class="detail-label">Register allocation</div>Cada variable es un vértice. Dos variables se conectan si sus "vidas" (intervalos de uso) se superponen. Los colores son los registros del procesador. Si se necesitan más colores que registros disponibles, el compilador "derrama" variables a memoria RAM.</div>
+</div>
+<div class="bg-glass-bg border border-glass-border rounded-xl p-4 hover:-translate-y-1 hover:shadow-xl transition reveal has-detail">
+<p class="text-2xl mb-2">📅</p>
+<p class="text-sm font-semibold text-text mb-1">Horarios de exámenes</p>
+<div class="detail-tip"><div class="detail-label">Generalización</div>Este problema es un caso del "graph coloring scheduling". Cada examen es un vértice. Se conectan si comparten al menos un estudiante. Los colores son las franjas horarias. Se aplica también a: citas médicas, programación de procesos en computadores, asignación de canales de WiFi.</div>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-3">
+<div class="inv-card reveal" style="border-color:#58a6ff;">
+<p class="text-xs font-mono text-accent-1 font-bold mb-1">✓ Resumen de lo demostrado</p>
+<ul class="text-xs text-text-secondary space-y-1">
+<li>• Terna {P}S{Q}: el greedy siempre produce un coloreo válido</li>
+<li>• Invariantes I0–I3 se mantienen en toda iteración (inducción)</li>
+<li>• Terminación: todos los bucles tienen función de cota finita</li>
+<li>• Cota: colors-used ≤ Δ(G)+1 siempre garantizada</li>
+</ul>
+</div>
+<div class="inv-card reveal" style="border-color:#3fb950;">
+<p class="text-xs font-mono text-accent-2 font-bold mb-1">¿Por qué vale la pena verificar formalmente?</p>
+<p class="text-xs text-text-secondary">La verificación con invariantes da una <strong class="text-text">certeza matemática</strong>: sin importar qué grafo le demos, el algoritmo se comporta como prometemos. Crucial cuando el software controla sistemas críticos como redes de telecomunicaciones o compiladores.</p>
+</div>
+</div>
+<div class="reveal mt-4 text-center">
+<p class="text-text-muted text-sm tracking-wider">¿Preguntas?</p>
+<div class="flex flex-wrap justify-center gap-6 text-xs text-text-muted mt-2">
+<span>Kenny Díaz Díaz</span><span class="text-accent-1/40">·</span><span>Johan Smith Tobón Gaviria</span>
+</div>
+</div>
+</div>
+</div>
+</div><!-- end .deck -->
+<div class="nav-controls">
+<button class="nav-btn" onclick="changeSlide(-1)">‹</button>
+<div class="slide-dots" id="dots"></div>
+<button class="nav-btn" onclick="changeSlide(1)">›</button>
+<span class="slide-counter" id="counter">1 / 13</span>
+</div>
+<script>
+    let current=1;const total=document.querySelectorAll('.slide').length;const dotsContainer=document.getElementById('dots');const counter=document.getElementById('counter');
+    for(let i=1;i<=total;i++){const dot=document.createElement('div');dot.className='dot'+(i===1?' active':'');dot.onclick=()=>goToSlide(i);dotsContainer.appendChild(dot);}
+    function goToSlide(n){const prev=document.querySelector('.slide.active');const next=document.querySelector(`.slide[data-slide="${n}"]`);if(prev)prev.classList.remove('active');if(next){next.classList.add('active');animateSlide(next);}current=n;updateNav();}
+    function changeSlide(dir){let next=current+dir;if(next<1)next=total;if(next>total)next=1;goToSlide(next);}
+    function updateNav(){document.querySelectorAll('.dot').forEach((d,i)=>{d.classList.toggle('active',i+1===current);});counter.textContent=current+' / '+total;}
+    document.addEventListener('keydown',(e)=>{if(e.key==='ArrowRight'||e.key===' '){e.preventDefault();changeSlide(1);}if(e.key==='ArrowLeft'){e.preventDefault();changeSlide(-1);}});
+    let touchStartX=0;document.addEventListener('touchstart',(e)=>{touchStartX=e.touches[0].clientX;});document.addEventListener('touchend',(e)=>{const diff=touchStartX-e.changedTouches[0].clientX;if(Math.abs(diff)>50)changeSlide(diff>0?1:-1);});
+    function animateSlide(slide){slide.querySelectorAll('.reveal').forEach((el,i)=>{el.style.transition='none';el.style.opacity='0';el.style.transform='translateY(18px)';el.offsetHeight;const delay=i*0.07;el.style.transition=`opacity 0.3s ease ${delay}s,transform 0.3s ease ${delay}s`;el.style.opacity='1';el.style.transform='translateY(0px)';});}
+    document.addEventListener('mousemove',(e)=>{const s=document.querySelector('.mouse-spotlight');if(s)s.style.background=`radial-gradient(600px circle at ${e.clientX}px ${e.clientY}px,rgba(88,166,255,0.06),transparent 40%)`;});
+    window.initParticles=function(canvas,options){if(!canvas)return;const ctx=canvas.getContext('2d');canvas.width=canvas.offsetWidth||800;canvas.height=canvas.offsetHeight||600;const interactive=options.interactive!==false;const count=options.count||(interactive?55:18);let mx=-1000,my=-1000;const particles=Array.from({length:count},()=>({x:Math.random()*canvas.width,y:Math.random()*canvas.height,vx:(Math.random()-0.5)*0.3,vy:(Math.random()-0.5)*0.3,size:Math.random()*2.5+0.8,alpha:Math.random()*0.35+0.1}));if(interactive){canvas.addEventListener('mousemove',(e)=>{const rect=canvas.getBoundingClientRect();mx=e.clientX-rect.left;my=e.clientY-rect.top;});canvas.addEventListener('mouseleave',()=>{mx=-1000;my=-1000;});}(function animate(){ctx.clearRect(0,0,canvas.width,canvas.height);particles.forEach(p=>{if(interactive){const dx=p.x-mx,dy=p.y-my,dist=Math.sqrt(dx*dx+dy*dy);if(dist<120){const force=(120-dist)/120*2;p.vx+=(dx/dist)*force*0.1;p.vy+=(dy/dist)*force*0.1;}}p.vx*=0.98;p.vy*=0.98;p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=canvas.width;if(p.x>canvas.width)p.x=0;if(p.y<0)p.y=canvas.height;if(p.y>canvas.height)p.y=0;ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fillStyle=`rgba(88,166,255,${p.alpha})`;ctx.fill();});requestAnimationFrame(animate);})();};
+    document.querySelectorAll('.particle-canvas').forEach(c=>window.initParticles(c,{interactive:true,count:55}));
+    document.querySelectorAll('.particle-canvas-ambient').forEach(c=>window.initParticles(c,{interactive:false,count:18}));
+    try{animateSlide(document.querySelector('.slide.active'));}catch(e){console.warn(e);}
+
+    /* ═══ SIDE HOVER PANEL — appears to the side with no overlap ═══ */
+    (function(){
+        const panel = document.getElementById('hover-panel');
+        const panelLabel = document.getElementById('hover-panel-label');
+        const panelBody = document.getElementById('hover-panel-body');
+        const PANEL_W = 244; // matches CSS width + borders
+        const PANEL_H = 220; // estimated max height
+        const MARGIN = 12;
+        const VW = () => window.innerWidth;
+        const VH = () => window.innerHeight;
+
+        function showPanel(trigger){
+            const tip = trigger.querySelector('.detail-tip');
+            if(!tip) return;
+            const labelEl = tip.querySelector('.detail-label');
+            panelLabel.textContent = labelEl ? labelEl.textContent : '';
+            // body = everything except the label
+            let bodyHTML = tip.innerHTML;
+            if(labelEl) bodyHTML = bodyHTML.replace(labelEl.outerHTML, '');
+            panelBody.innerHTML = bodyHTML;
+
+            const rect = trigger.getBoundingClientRect();
+            let x, y;
+
+            // Prefer RIGHT side of trigger
+            if(rect.right + MARGIN + PANEL_W <= VW()){
+                x = rect.right + MARGIN;
+            } else if(rect.left - MARGIN - PANEL_W >= 0){
+                // LEFT side of trigger
+                x = rect.left - MARGIN - PANEL_W;
+            } else {
+                // Not enough room on either side — use right edge of viewport with margin
+                x = VW() - PANEL_W - MARGIN;
+            }
+
+            // Vertically align to trigger top, clamp to viewport
+            y = rect.top;
+            // If panel would go below viewport, push it up
+            if(y + PANEL_H > VH() - MARGIN){
+                y = VH() - PANEL_H - MARGIN;
+            }
+            if(y < MARGIN) y = MARGIN;
+
+            panel.style.left = x + 'px';
+            panel.style.top  = y + 'px';
+            panel.classList.add('visible');
+        }
+
+        function hidePanel(){
+            panel.classList.remove('visible');
+        }
+
+        document.addEventListener('mouseover', function(e){
+            const trigger = e.target.closest('.has-detail');
+            if(trigger){ showPanel(trigger); }
+        });
+        document.addEventListener('mouseout', function(e){
+            const trigger = e.target.closest('.has-detail');
+            if(trigger && !trigger.contains(e.relatedTarget)){
+                hidePanel();
+            }
+        });
+    })();
+
+</script>
+</body>
+</html>
